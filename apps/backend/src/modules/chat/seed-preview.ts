@@ -34,39 +34,60 @@ router.post('/seed-chat-preview', async (req, res) => {
     const USER_B_EMAIL = process.env.SEED_CHAT_USER_B_EMAIL ?? 'userb@preview.local';
     const USER_B_PASSWORD = process.env.SEED_CHAT_USER_B_PASSWORD ?? 'UserB123456!';
 
-    // ── 2. Create SUPER_ADMIN ────────────────────────────────────────────────
+    // ── 2. Create SUPER_ADMIN (upsert by ID — immune to email mismatch) ────────
     const superAdminHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
-    const superAdmin = await prisma.user.upsert({
-      where: { email: SUPER_ADMIN_EMAIL.toLowerCase() },
-      update: { name: 'Preview Super Admin', passwordHash: superAdminHash, isActive: true },
-      create: { id: 'fixture_super_admin', name: 'Preview Super Admin', email: SUPER_ADMIN_EMAIL.toLowerCase(), passwordHash: superAdminHash, isActive: true, membershipStatus: 'REGULAR' },
-    });
+    const existingSuperAdmin = await prisma.user.findUnique({ where: { id: 'fixture_super_admin' } });
+    let superAdmin: { id: string; email: string };
+    if (existingSuperAdmin) {
+      superAdmin = await prisma.user.update({
+        where: { id: 'fixture_super_admin' },
+        data: { email: SUPER_ADMIN_EMAIL.toLowerCase().trim(), name: 'Preview Super Admin', passwordHash: superAdminHash, isActive: true },
+      });
+    } else {
+      superAdmin = await prisma.user.create({
+        data: { id: 'fixture_super_admin', name: 'Preview Super Admin', email: SUPER_ADMIN_EMAIL.toLowerCase().trim(), passwordHash: superAdminHash, isActive: true, membershipStatus: 'REGULAR' },
+      });
+    }
     await prisma.userRole.upsert({
       where: { userId_roleId: { userId: superAdmin.id, roleId: superAdminRole.id } },
       update: {},
       create: { userId: superAdmin.id, roleId: superAdminRole.id },
     });
 
-    // ── 3. Create USER A ─────────────────────────────────────────────────────
+    // ── 3. Create USER A (upsert by ID) ────────────────────────────────────────
     const userAHash = await bcrypt.hash(USER_A_PASSWORD, 10);
-    const userA = await prisma.user.upsert({
-      where: { email: USER_A_EMAIL.toLowerCase() },
-      update: { name: 'Preview User A', passwordHash: userAHash, isActive: true },
-      create: { id: 'fixture_user_a', name: 'Preview User A', email: USER_A_EMAIL.toLowerCase(), passwordHash: userAHash, isActive: true, membershipStatus: 'REGULAR' },
-    });
+    const existingUserA = await prisma.user.findUnique({ where: { id: 'fixture_user_a' } });
+    let userA: { id: string };
+    if (existingUserA) {
+      userA = await prisma.user.update({
+        where: { id: 'fixture_user_a' },
+        data: { email: USER_A_EMAIL.toLowerCase().trim(), name: 'Preview User A', passwordHash: userAHash, isActive: true },
+      });
+    } else {
+      userA = await prisma.user.create({
+        data: { id: 'fixture_user_a', name: 'Preview User A', email: USER_A_EMAIL.toLowerCase().trim(), passwordHash: userAHash, isActive: true, membershipStatus: 'REGULAR' },
+      });
+    }
     await prisma.userRole.upsert({
       where: { userId_roleId: { userId: userA.id, roleId: userRole.id } },
       update: {},
       create: { userId: userA.id, roleId: userRole.id },
     });
 
-    // ── 4. Create USER B ─────────────────────────────────────────────────────
+    // ── 4. Create USER B (upsert by ID) ────────────────────────────────────────
     const userBHash = await bcrypt.hash(USER_B_PASSWORD, 10);
-    const userB = await prisma.user.upsert({
-      where: { email: USER_B_EMAIL.toLowerCase() },
-      update: { name: 'Preview User B', passwordHash: userBHash, isActive: true },
-      create: { id: 'fixture_user_b', name: 'Preview User B', email: USER_B_EMAIL.toLowerCase(), passwordHash: userBHash, isActive: true, membershipStatus: 'REGULAR' },
-    });
+    const existingUserB = await prisma.user.findUnique({ where: { id: 'fixture_user_b' } });
+    let userB: { id: string };
+    if (existingUserB) {
+      userB = await prisma.user.update({
+        where: { id: 'fixture_user_b' },
+        data: { email: USER_B_EMAIL.toLowerCase().trim(), name: 'Preview User B', passwordHash: userBHash, isActive: true },
+      });
+    } else {
+      userB = await prisma.user.create({
+        data: { id: 'fixture_user_b', name: 'Preview User B', email: USER_B_EMAIL.toLowerCase().trim(), passwordHash: userBHash, isActive: true, membershipStatus: 'REGULAR' },
+      });
+    }
     await prisma.userRole.upsert({
       where: { userId_roleId: { userId: userB.id, roleId: userRole.id } },
       update: {},
