@@ -21,8 +21,9 @@ vi.mock('../../lib/db.js', () => {
   };
 });
 
-// ── Access mock AFTER vi.mock ───────────────────────────────────────────────
+// ── Access mock AFTER vi.mock — cast to any so vi.fn() methods are visible ──
 import { prisma } from '../../lib/db.js';
+const db = prisma as any;
 
 // ── Helper factories ────────────────────────────────────────────────────────
 const mkConv = (overrides: Record<string, unknown> = {}) => ({
@@ -61,9 +62,8 @@ describe('ChatService.sendMessage authorization', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: conversation owned by user-123
-    prisma.chatConversation.findUnique.mockResolvedValue(mkConv({ userId: 'user-123' }));
-    // Return whatever data was passed to create()
-    prisma.chatMessage.create.mockImplementation((args: { data: Record<string, unknown> }) =>
+    db.chatConversation.findUnique.mockResolvedValue(mkConv({ userId: 'user-123' }));
+    db.chatMessage.create.mockImplementation((args: { data: Record<string, unknown> }) =>
       Promise.resolve({
         id: 'msg-new',
         conversationId: args.data.conversationId as string,
@@ -74,16 +74,16 @@ describe('ChatService.sendMessage authorization', () => {
         createdAt: new Date(),
       })
     );
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatConversation.update.mockResolvedValue(mkConv());
   });
 
   it('USER reads own conversation — passes ownership check, returns messages', async () => {
-    prisma.chatMessage.findMany.mockResolvedValue([mkMsg()]);
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatMessage.findMany.mockResolvedValue([mkMsg()]);
+    db.chatConversation.update.mockResolvedValue(mkConv());
 
     const result = await service.getMessages('conv-1', 'user-123', false);
     expect(result).toHaveLength(1);
-    expect(prisma.chatMessage.findMany).toHaveBeenCalled();
+    expect(db.chatMessage.findMany).toHaveBeenCalled();
   });
 
   it('USER tries to read another user\'s conversation — 403', async () => {
@@ -92,17 +92,17 @@ describe('ChatService.sendMessage authorization', () => {
   });
 
   it('ADMIN reads user conversation — bypasses ownership check, returns 200', async () => {
-    prisma.chatMessage.findMany.mockResolvedValue([mkMsg()]);
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatMessage.findMany.mockResolvedValue([mkMsg()]);
+    db.chatConversation.update.mockResolvedValue(mkConv());
 
     const result = await service.getMessages('conv-1', 'admin-999', true);
     expect(result).toHaveLength(1);
-    expect(prisma.chatMessage.findMany).toHaveBeenCalled();
+    expect(db.chatMessage.findMany).toHaveBeenCalled();
   });
 
   it('SUPER_ADMIN reads user conversation — bypasses ownership check, returns 200', async () => {
-    prisma.chatMessage.findMany.mockResolvedValue([mkMsg()]);
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatMessage.findMany.mockResolvedValue([mkMsg()]);
+    db.chatConversation.update.mockResolvedValue(mkConv());
 
     const result = await service.getMessages('conv-1', 'super-admin-999', true);
     expect(result).toHaveLength(1);
@@ -111,7 +111,7 @@ describe('ChatService.sendMessage authorization', () => {
   it('ADMIN sends reply to user conversation — succeeds', async () => {
     const result = await service.sendMessage('conv-1', 'admin-999', 'ADMIN', 'Hello from admin');
     expect(result.message).toBe('Hello from admin');
-    expect(prisma.chatMessage.create).toHaveBeenCalledWith({
+    expect(db.chatMessage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         conversationId: 'conv-1',
         senderId: 'admin-999',
@@ -129,7 +129,7 @@ describe('ChatService.sendMessage authorization', () => {
   it('USER sends message to own conversation — succeeds', async () => {
     const result = await service.sendMessage('conv-1', 'user-123', 'USER', 'My message');
     expect(result.message).toBe('My message');
-    expect(prisma.chatMessage.create).toHaveBeenCalledWith({
+    expect(db.chatMessage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ senderRole: 'USER' }),
     });
   });
@@ -140,28 +140,28 @@ describe('ChatService.sendMessage authorization', () => {
   });
 
   it('ADMIN markRead on user conversation — succeeds', async () => {
-    prisma.chatMessage.updateMany.mockResolvedValue({ count: 1 });
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatMessage.updateMany.mockResolvedValue({ count: 1 });
+    db.chatConversation.update.mockResolvedValue(mkConv());
 
     const result = await service.markRead('conv-1', 'admin-999', true);
     expect(result).toEqual({ success: true });
-    expect(prisma.chatMessage.updateMany).toHaveBeenCalledWith({
+    expect(db.chatMessage.updateMany).toHaveBeenCalledWith({
       where: { conversationId: 'conv-1', senderRole: 'USER', readAt: null },
       data: { readAt: expect.any(Date) },
     });
   });
 
   it('SUPER_ADMIN markRead on user conversation — succeeds', async () => {
-    prisma.chatMessage.updateMany.mockResolvedValue({ count: 1 });
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatMessage.updateMany.mockResolvedValue({ count: 1 });
+    db.chatConversation.update.mockResolvedValue(mkConv());
 
     const result = await service.markRead('conv-1', 'super-admin-999', true);
     expect(result).toEqual({ success: true });
   });
 
   it('USER markRead own conversation — succeeds', async () => {
-    prisma.chatMessage.updateMany.mockResolvedValue({ count: 1 });
-    prisma.chatConversation.update.mockResolvedValue(mkConv());
+    db.chatMessage.updateMany.mockResolvedValue({ count: 1 });
+    db.chatConversation.update.mockResolvedValue(mkConv());
 
     const result = await service.markRead('conv-1', 'user-123', false);
     expect(result).toEqual({ success: true });
@@ -173,19 +173,19 @@ describe('ChatService.sendMessage authorization', () => {
   });
 
   it('Conversation not found — 404 for getMessages', async () => {
-    prisma.chatConversation.findUnique.mockResolvedValue(null);
+    db.chatConversation.findUnique.mockResolvedValue(null);
     await expect(service.getMessages('nonexistent', 'user-123', false))
       .rejects.toMatchObject({ statusCode: 404, message: 'Percakapan tidak ditemukan.' });
   });
 
   it('Conversation not found — 404 for sendMessage', async () => {
-    prisma.chatConversation.findUnique.mockResolvedValue(null);
+    db.chatConversation.findUnique.mockResolvedValue(null);
     await expect(service.sendMessage('nonexistent', 'user-123', 'USER', 'test'))
       .rejects.toMatchObject({ statusCode: 404, message: 'Percakapan tidak ditemukan.' });
   });
 
   it('Conversation not found — 404 for markRead', async () => {
-    prisma.chatConversation.findUnique.mockResolvedValue(null);
+    db.chatConversation.findUnique.mockResolvedValue(null);
     await expect(service.markRead('nonexistent', 'user-123', false))
       .rejects.toMatchObject({ statusCode: 404, message: 'Percakapan tidak ditemukan.' });
   });
