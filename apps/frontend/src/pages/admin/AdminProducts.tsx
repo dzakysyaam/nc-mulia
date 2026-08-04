@@ -171,7 +171,11 @@ export default function AdminProducts({ user, onLogout }: { user: User; onLogout
               return (
                 <Card key={product.id} padding="none" hover className="overflow-hidden group relative">
                   <div className="h-40 flex items-center justify-center relative" style={{ backgroundColor: bgColor }}>
-                    <span className="text-4xl font-bold text-black/15 select-none">{initials}</span>
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-4xl font-bold text-black/15 select-none">{initials}</span>
+                    )}
                     <div className="absolute top-3 right-3">
                       <Badge variant={product.isActive ? 'success' : 'neutral'} dot>
                         {product.isActive ? 'Aktif' : 'Nonaktif'}
@@ -197,7 +201,7 @@ export default function AdminProducts({ user, onLogout }: { user: User; onLogout
                     <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 line-clamp-2">{product.name}</h3>
                     <div className="flex items-baseline gap-1 mb-3">
                       <span className="text-lg font-bold text-brand-primary">
-                        Rp {(product.pricing?.finalPrice ?? product.basePrice).toLocaleString('id-ID')}
+                        Rp {(product.pricing?.finalPrice ?? Number(product.price)).toLocaleString('id-ID')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

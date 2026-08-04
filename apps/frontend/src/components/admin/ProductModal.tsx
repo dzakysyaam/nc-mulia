@@ -20,6 +20,7 @@ export interface ProductFormData {
   description: string;
   benefits: string;
   price: number;
+  stock: number;
   imageUrl: string;
   isAvailable: boolean;
   isMemberDiscountEligible: boolean;
@@ -32,6 +33,7 @@ export function ProductModal({ open, onClose, product, onSave }: ProductModalPro
     description: '',
     benefits: '',
     price: 0,
+    stock: 0,
     imageUrl: '',
     isAvailable: true,
     isMemberDiscountEligible: true,
@@ -46,14 +48,15 @@ export function ProductModal({ open, onClose, product, onSave }: ProductModalPro
           name: product.name,
           category: product.category,
           description: product.description ?? '',
-          benefits: (product as any).benefits ?? '',
-          price: (product as any).basePrice ?? 0,
+          benefits: product.benefits ?? '',
+          price: Number(product.price ?? product.basePrice ?? 0),
+          stock: Number(product.stock ?? 0),
           imageUrl: product.imageUrl ?? '',
           isAvailable: product.isAvailable ?? true,
           isMemberDiscountEligible: product.isMemberDiscountEligible ?? true,
         });
       } else {
-        setForm({ name: '', category: 'Shake', description: '', benefits: '', price: 0, imageUrl: '', isAvailable: true, isMemberDiscountEligible: true });
+        setForm({ name: '', category: 'Shake', description: '', benefits: '', price: 0, stock: 0, imageUrl: '', isAvailable: true, isMemberDiscountEligible: true });
       }
       setError('');
     }
@@ -109,6 +112,17 @@ export function ProductModal({ open, onClose, product, onSave }: ProductModalPro
               type="number"
               value={form.price}
               onChange={e => update('price', Number(e.target.value))}
+              placeholder="0"
+              min={0}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Stok</label>
+            <Input
+              type="number"
+              value={form.stock}
+              onChange={e => update('stock', Number(e.target.value))}
               placeholder="0"
               min={0}
               className="w-full"

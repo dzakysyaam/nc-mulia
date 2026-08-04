@@ -51,10 +51,11 @@ export interface Product {
   imageUrl?: string;
   image?: string;
   type?: string;
+  stock?: number;
   isAvailable?: boolean;
   isActive?: boolean;
   isMemberDiscountEligible?: boolean;
-  basePrice: number;
+  basePrice?: number;
   price?: number;
   pricing?: {
     discountPercentage: number;

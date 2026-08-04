@@ -192,7 +192,7 @@ export default function BmiPage({ user }: BmiPageProps) {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm text-foreground truncate">{product.name}</div>
-                      <div className="text-xs text-brand-primary font-semibold">{formatPrice(product.basePrice)}</div>
+                      <div className="text-xs text-brand-primary font-semibold">{formatPrice(product.basePrice!)}</div>
                     </div>
                   </div>
                 ))}

@@ -19,8 +19,12 @@ function mapStaticProduct(p: (typeof herbalifeProducts)[0]): Product {
     imageUrl: img,
     isAvailable: true,
     basePrice: base,
-    pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: base, membershipApplied: false },
+    pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: base ?? 0, membershipApplied: false },
   };
+}
+
+function getBasePrice(p: Product): number {
+  return p.basePrice ?? p.price ?? p.pricing?.finalPrice ?? 0;
 }
 
 function formatPrice(n: number) {
@@ -30,26 +34,24 @@ function formatPrice(n: number) {
 export default function ProductsPage({ user }: ProductsPageProps) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [products, setProducts] = useState<Product[]>(() => {
-    // Default to static data — always show products even without login
-    return herbalifeProducts
-      .filter(p => category === 'All' || p.category === category)
-      .map(mapStaticProduct);
-  });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const { addToCart, isInCart, isLoading: cartLoading } = useCart();
 
   useEffect(() => {
-    // Try to fetch from API for dynamic DB data (logged-in users get membership pricing)
     setLoading(true);
     productsApi.list({ category: category === 'All' ? undefined : category }).then(res => {
       if (res.success && res.data && res.data.length > 0) {
         setProducts(res.data);
+      } else {
+        setProducts(herbalifeProducts.filter(p => category === 'All' || p.category === category).map(mapStaticProduct));
       }
-      // If API fails or returns empty, keep static data
+      setLoaded(true);
     }).catch(() => {
-      // API call failed (e.g. not logged in), keep static data
+      setProducts(herbalifeProducts.filter(p => category === 'All' || p.category === category).map(mapStaticProduct));
+      setLoaded(true);
     }).finally(() => {
       setLoading(false);
     });
@@ -60,7 +62,7 @@ export default function ProductsPage({ user }: ProductsPageProps) {
   );
 
   const handleAdd = (product: Product) => {
-    const final = product.pricing?.finalPrice ?? product.basePrice;
+    const final = product.pricing?.finalPrice ?? getBasePrice(product);
     addToCart({ id: product.id, name: product.name, price: final });
     setAddedIds(prev => new Set([...prev, product.id]));
     setTimeout(() => setAddedIds(prev => { const n = new Set(prev); n.delete(product.id); return n; }), 2000);
@@ -100,7 +102,7 @@ export default function ProductsPage({ user }: ProductsPageProps) {
         </div>
       </div>
 
-      {loading ? (
+      {loading || !loaded ? (
         <div className="flex justify-center py-24"><div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-slate-400">Tidak ada produk yang cocok.</div>
@@ -109,9 +111,9 @@ export default function ProductsPage({ user }: ProductsPageProps) {
           {filtered.map(product => {
             const inCart = isInCart(product.id);
             const justAdded = addedIds.has(product.id);
-            const pricing = product.pricing ?? { discountPercentage: 0, discountAmount: 0, finalPrice: product.basePrice, membershipApplied: false };
+            const pricing = product.pricing ?? { discountPercentage: 0, discountAmount: 0, finalPrice: getBasePrice(product), membershipApplied: false };
             const hasDiscount = pricing.membershipApplied && pricing.discountPercentage > 0;
-            const basePrice = product.basePrice;
+            const basePrice = getBasePrice(product);
             const finalPrice = pricing.finalPrice;
             return (
               <div key={product.id} className="bg-white rounded-3xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow border border-slate-200/80">

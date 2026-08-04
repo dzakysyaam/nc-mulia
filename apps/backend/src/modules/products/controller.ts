@@ -13,13 +13,15 @@ const querySchema = z.object({
   includeInactive: z.coerce.boolean().optional(),
 });
 
+const VALID_CATEGORIES = ['Shake', 'Tea', 'Bar', 'Suplemen', 'Program'];
+
 const createSchema = z.object({
   name: z.string().min(1),
-  category: z.string().min(1),
+  category: z.string().min(1).refine(v => VALID_CATEGORIES.includes(v), { message: `Kategori harus salah satu dari: ${VALID_CATEGORIES.join(', ')}` }),
   description: z.string().optional(),
   benefits: z.string().optional(),
-  price: z.number().min(0),
-  stock: z.number().int().min(0).optional(),
+  price: z.number().min(0, 'Harga tidak boleh negatif'),
+  stock: z.number().int().min(0, 'Stok tidak boleh negatif').optional(),
   imageUrl: z.string().optional(),
 });
 
