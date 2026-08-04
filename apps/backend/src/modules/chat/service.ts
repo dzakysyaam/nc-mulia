@@ -79,6 +79,7 @@ export class ChatService {
   async sendMessage(conversationId: string, senderId: string, senderRole: 'ADMIN' | 'USER', message: string) {
     const conv = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
     if (!conv) throw err(404, 'Percakapan tidak ditemukan.');
+    if (senderRole === 'USER' && conv.userId !== senderId) throw err(403, 'Tidak diizinkan.');
 
     const msg = await prisma.chatMessage.create({ data: { conversationId, senderId, senderRole, message } });
 
