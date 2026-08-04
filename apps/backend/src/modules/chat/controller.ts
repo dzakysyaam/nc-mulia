@@ -36,7 +36,7 @@ export async function listAllConversations(req: Request, res: Response, next: Ne
 
 export async function getMessages(req: Request, res: Response, next: NextFunction) {
   try {
-    const isAdmin = req.user!.role === 'admin';
+    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'super_admin';
     const messages = await service.getMessages(req.params.id as string, req.user!.userId, isAdmin);
     res.json({ success: true, message: 'OK.', data: messages });
   } catch (e) { next(e); }
@@ -46,7 +46,7 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
   try {
     const parsed = sendMsgSchema.safeParse(req.body);
     if (!parsed.success) { res.status(400).json({ success: false, message: 'Data tidak valid.', errors: parseErrors(parsed.error) }); return; }
-    const isAdmin = req.user!.role === 'admin';
+    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'super_admin';
     const convId = req.params.id as string;
     const result = await service.sendMessage(convId, req.user!.userId, isAdmin ? 'ADMIN' : 'USER', parsed.data.message);
     try { const io = getIO(); io.to(`chat:${convId}`).emit('message:new', { conversationId: convId, ...result }); } catch {}
@@ -56,7 +56,7 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
 
 export async function markRead(req: Request, res: Response, next: NextFunction) {
   try {
-    const isAdmin = req.user!.role === 'admin';
+    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'super_admin';
     const result = await service.markRead(req.params.id as string, req.user!.userId, isAdmin);
     res.json({ success: true, message: 'OK.', data: result });
   } catch (e) { next(e); }

@@ -24,7 +24,12 @@ export function Navbar({ user, logout, openLogin, cartCount = 0 }: NavbarProps) 
     { to: '/lokasi', label: 'Lokasi' },
   ];
 
-  const visibleLinks = navLinks.filter(l => !('auth' in l && l.auth && !user));
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const visibleLinks = navLinks.filter(l => {
+    if ('auth' in l && l.auth && !user) return false;
+    if (isAdmin) return false;
+    return true;
+  });
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -67,6 +72,7 @@ export function Navbar({ user, logout, openLogin, cartCount = 0 }: NavbarProps) 
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
+            {!isAdmin && (
             <Link
               to="/keranjang"
               className="relative w-9 h-9 rounded-lg flex items-center justify-center text-foreground-muted hover:text-brand-primary hover:bg-brand-primary-soft transition-all"
@@ -79,6 +85,7 @@ export function Navbar({ user, logout, openLogin, cartCount = 0 }: NavbarProps) 
                 </span>
               )}
             </Link>
+            )}
             {user ? (
               <div className="flex items-center gap-3">
                 {(user.role === 'admin' || user.role === 'super_admin') && (
@@ -144,6 +151,7 @@ export function Navbar({ user, logout, openLogin, cartCount = 0 }: NavbarProps) 
                 {link.label}
               </RouterNavLink>
             ))}
+            {!isAdmin && (
             <RouterNavLink
               to="/keranjang"
               onClick={() => setMobileOpen(false)}
@@ -164,6 +172,7 @@ export function Navbar({ user, logout, openLogin, cartCount = 0 }: NavbarProps) 
                 </span>
               )}
             </RouterNavLink>
+            )}
             <div className="pt-3 border-t border-border">
               {user ? (
                 <div className="px-4 py-2">

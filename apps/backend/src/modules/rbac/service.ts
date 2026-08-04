@@ -190,8 +190,11 @@ export async function setUserRoles(userId: string, roleIds: string[]) {
     err.statusCode = 404;
     throw err;
   }
-  await prisma.userRole.deleteMany({ where: { userId } });
-  if (roleIds.length > 0) {
-    await prisma.userRole.createMany({ data: roleIds.map(roleId => ({ userId, roleId })) });
+  if (roleIds.length === 0) {
+    const err: any = new Error('User harus memiliki setidaknya satu role.');
+    err.statusCode = 400;
+    throw err;
   }
+  await prisma.userRole.deleteMany({ where: { userId } });
+  await prisma.userRole.createMany({ data: roleIds.map(roleId => ({ userId, roleId })) });
 }

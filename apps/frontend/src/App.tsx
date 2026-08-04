@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { AuthModals } from './components/layout/AuthModals';
@@ -50,6 +50,7 @@ function NavbarWithCart({ user, logout, openLogin }: { user: User | null; logout
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -77,6 +78,10 @@ function App() {
         setUser(res.data);
         setIsLoginOpen(false);
         setLoginForm({ email: '', password: '' });
+        // Redirect admin/super_admin to /admin
+        if (res.data.role === 'admin' || res.data.role === 'super_admin') {
+          navigate('/admin');
+        }
       } else {
         setAuthError(res.message || 'Login gagal.');
       }

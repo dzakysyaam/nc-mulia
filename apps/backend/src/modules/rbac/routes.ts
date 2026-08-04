@@ -29,6 +29,6 @@ router.put('/roles/:roleId/navigation', authMiddleware, requirePermission('menus
 
 // User roles & permissions
 router.get('/users/:userId/permissions', authMiddleware, requirePermission('users:assign_role'));
-router.put('/users/:userId/roles', authMiddleware, ctrl.setUserRoles);
+router.put('/users/:userId/roles', authMiddleware, requirePermission('users:assign_role'), ctrl.setUserRoles);
 
 export default router;

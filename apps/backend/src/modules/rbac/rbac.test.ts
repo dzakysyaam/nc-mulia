@@ -152,12 +152,9 @@ describe('RBAC Service', () => {
       });
     });
 
-    it('deletes all roles when empty array passed', async () => {
+    it('throws 400 when empty array passed (must have at least one role)', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', name: 'John' });
-      mockPrisma.userRole.deleteMany.mockResolvedValue({ count: 2 });
-      await rbacService.setUserRoles('u1', []);
-      expect(mockPrisma.userRole.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u1' } });
-      expect(mockPrisma.userRole.createMany).not.toHaveBeenCalled();
+      await expect(rbacService.setUserRoles('u1', [])).rejects.toMatchObject({ statusCode: 400 });
     });
 
     it('throws 404 when user not found', async () => {
