@@ -12,9 +12,7 @@ const CATEGORIES = [
 
 // ── Centrally used throughout the module ─────────────────────────────────────
 // formatLabel: DB enum → display label (Indonesian)
-// toDbValue: display label → DB enum
 const formatLabel = (dbValue: string) => CATEGORIES.find(c => c.dbValue === dbValue)?.label ?? dbValue;
-const toDbValue   = (displayLabel: string) => CATEGORIES.find(c => c.label === displayLabel)?.dbValue ?? displayLabel;
 
 export class BmiService {
   calculate(weightKg: number, heightCm: number) {
@@ -24,7 +22,7 @@ export class BmiService {
   }
 
   async createRecord(userId: string, weightKg: number, heightCm: number) {
-    const { value, category, dbCategory } = this.calculate(weightKg, heightCm);
+    const { value, dbCategory } = this.calculate(weightKg, heightCm);
     const record = await prisma.bmiRecord.create({
       data: { userId, weight: weightKg, height: heightCm, bmi: value, bmiCategory: dbCategory },
     });
