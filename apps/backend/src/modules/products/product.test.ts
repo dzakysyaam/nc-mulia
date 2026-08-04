@@ -153,7 +153,7 @@ describe('ProductsService', () => {
       mockPrisma.product.update.mockResolvedValue({ id: 'p1', name: 'F1 Shake Pro', category: 'Premium', description: 'Updated', benefits: '', price: 200000, imageUrl: null, stock: 10, isAvailable: true, isMemberDiscountEligible: false, isActive: true });
       const svc = new ProductsService();
       const result = await svc.update('p1', { name: 'F1 Shake Pro', price: 200000, category: 'Premium', isMemberDiscountEligible: false });
-      expect(result.price).toBe(200000);
+      expect(result.basePrice).toBe(200000);
       expect(result.name).toBe('F1 Shake Pro');
     });
   });

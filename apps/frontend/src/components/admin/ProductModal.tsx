@@ -49,7 +49,7 @@ export function ProductModal({ open, onClose, product, onSave }: ProductModalPro
           category: product.category,
           description: product.description ?? '',
           benefits: product.benefits ?? '',
-          price: Number(product.price ?? product.basePrice ?? 0),
+          price: Number(product.basePrice ?? 0),
           stock: Number(product.stock ?? 0),
           imageUrl: product.imageUrl ?? '',
           isAvailable: product.isAvailable ?? true,

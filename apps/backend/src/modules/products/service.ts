@@ -18,7 +18,7 @@ function applyPricing(product: any, isMember: boolean, discountRate: number) {
     description: product.description,
     benefits: product.benefits,
     imageUrl: product.imageUrl,
-    price: product.price,
+    basePrice: price,
     stock: product.stock,
     isAvailable: product.isAvailable && product.stock > 0,
     isMemberDiscountEligible: product.isMemberDiscountEligible,
@@ -70,37 +70,39 @@ export class ProductsService {
     const p = await prisma.product.create({
       data: { name: data.name, category: data.category, description: data.description ?? '', benefits: data.benefits, price: data.price, imageUrl: data.imageUrl, stock: data.stock ?? 0, isAvailable: true, isMemberDiscountEligible: true, isActive: true },
     });
+    const priceNum = typeof p.price === 'number' ? p.price : Number(p.price);
     return {
       id: p.id,
       name: p.name,
       category: p.category,
       description: p.description,
       benefits: p.benefits,
-      price: p.price,
+      basePrice: priceNum,
       stock: p.stock,
       imageUrl: p.imageUrl,
       isAvailable: p.isAvailable,
       isMemberDiscountEligible: p.isMemberDiscountEligible,
       isActive: p.isActive,
-      pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: p.price, membershipApplied: false },
+      pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: priceNum, membershipApplied: false },
     };
   }
 
   async update(id: string, data: Partial<{ name: string; category: string; description: string; benefits: string; price: number; imageUrl: string; stock: number; isAvailable: boolean; isMemberDiscountEligible: boolean }>) {
     const p = await prisma.product.update({ where: { id }, data });
+    const priceNum = typeof p.price === 'number' ? p.price : Number(p.price);
     return {
       id: p.id,
       name: p.name,
       category: p.category,
       description: p.description,
       benefits: p.benefits,
-      price: p.price,
+      basePrice: priceNum,
       stock: p.stock,
       imageUrl: p.imageUrl,
       isAvailable: p.isAvailable,
       isMemberDiscountEligible: p.isMemberDiscountEligible,
       isActive: p.isActive,
-      pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: p.price, membershipApplied: false },
+      pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: priceNum, membershipApplied: false },
     };
   }
 

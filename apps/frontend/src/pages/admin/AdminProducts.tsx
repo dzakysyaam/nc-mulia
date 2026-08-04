@@ -201,7 +201,7 @@ export default function AdminProducts({ user, onLogout }: { user: User; onLogout
                     <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 line-clamp-2">{product.name}</h3>
                     <div className="flex items-baseline gap-1 mb-3">
                       <span className="text-lg font-bold text-brand-primary">
-                        Rp {(product.pricing?.finalPrice ?? Number(product.price)).toLocaleString('id-ID')}
+                        Rp {(product.pricing?.finalPrice ?? product.basePrice ?? 0).toLocaleString('id-ID')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

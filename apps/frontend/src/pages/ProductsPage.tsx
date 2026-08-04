@@ -2,34 +2,22 @@ import { useState, useEffect } from 'react';
 import { productsApi } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
 import type { Product, User } from '../lib/api';
-import { herbalifeProducts } from '../data/herbalife-products';
 
 interface ProductsPageProps { user?: User | null; }
 
-const CATEGORIES = ['All', 'Shake', 'Tea', 'Bar', 'Suplemen', 'Program'];
-
-function mapStaticProduct(p: (typeof herbalifeProducts)[0]): Product {
-  const base = p.basePrice;
-  const img = p.image || `https://placehold.co/400x300/DDF4EA/087F5B?text=${encodeURIComponent(p.name)}`;
-  return {
-    id: p.id,
-    name: p.name,
-    description: p.description,
-    category: p.category,
-    imageUrl: img,
-    isAvailable: true,
-    basePrice: base,
-    pricing: { discountPercentage: 0, discountAmount: 0, finalPrice: base ?? 0, membershipApplied: false },
-  };
+function getBasePrice(p: Product): number {
+  return p.basePrice ?? 0;
 }
 
-function getBasePrice(p: Product): number {
-  return p.basePrice ?? p.price ?? p.pricing?.finalPrice ?? 0;
+function getEffectivePrice(p: Product): number {
+  return p.pricing?.finalPrice ?? getBasePrice(p);
 }
 
 function formatPrice(n: number) {
   return `Rp ${n.toLocaleString('id-ID')}`;
 }
+
+const CATEGORIES = ['All', 'Shake', 'Tea', 'Bar', 'Suplemen', 'Program'];
 
 export default function ProductsPage({ user }: ProductsPageProps) {
   const [search, setSearch] = useState('');
@@ -37,32 +25,37 @@ export default function ProductsPage({ user }: ProductsPageProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const { addToCart, isInCart, isLoading: cartLoading } = useCart();
 
-  useEffect(() => {
+  const fetchProducts = () => {
     setLoading(true);
+    setError('');
     productsApi.list({ category: category === 'All' ? undefined : category }).then(res => {
-      if (res.success && res.data && res.data.length > 0) {
+      if (res.success && res.data) {
         setProducts(res.data);
       } else {
-        setProducts(herbalifeProducts.filter(p => category === 'All' || p.category === category).map(mapStaticProduct));
+        setProducts([]);
       }
       setLoaded(true);
     }).catch(() => {
-      setProducts(herbalifeProducts.filter(p => category === 'All' || p.category === category).map(mapStaticProduct));
+      setError('Gagal memuat produk. Silakan coba lagi.');
+      setProducts([]);
       setLoaded(true);
     }).finally(() => {
       setLoading(false);
     });
-  }, [category]);
+  };
+
+  useEffect(() => { fetchProducts(); }, [category]);
 
   const filtered = products.filter(p =>
     search === '' || p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleAdd = (product: Product) => {
-    const final = product.pricing?.finalPrice ?? getBasePrice(product);
+    const final = getEffectivePrice(product);
     addToCart({ id: product.id, name: product.name, price: final });
     setAddedIds(prev => new Set([...prev, product.id]));
     setTimeout(() => setAddedIds(prev => { const n = new Set(prev); n.delete(product.id); return n; }), 2000);
@@ -104,8 +97,13 @@ export default function ProductsPage({ user }: ProductsPageProps) {
 
       {loading || !loaded ? (
         <div className="flex justify-center py-24"><div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" /></div>
+      ) : error ? (
+        <div className="text-center py-16">
+          <p className="text-slate-400 mb-4">{error}</p>
+          <button onClick={fetchProducts} className="px-5 py-2 bg-emerald-600 text-white text-sm rounded-xl hover:bg-emerald-700 transition-colors">Coba Lagi</button>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">Tidak ada produk yang cocok.</div>
+        <div className="text-center py-16 text-slate-400">Produk belum tersedia.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filtered.map(product => {
