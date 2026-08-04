@@ -11,6 +11,7 @@ const envSchema = z.object({
   SEED_ADMIN_NAME: z.string().optional(),
   SEED_ADMIN_EMAIL: z.string().email().optional(),
   SEED_ADMIN_PASSWORD: z.string().min(8).optional(),
+  SEED_CHAT_API_KEY: z.string().optional(),
 });
 
 /** Validates all required environment variables at startup. */

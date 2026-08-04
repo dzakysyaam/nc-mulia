@@ -148,7 +148,7 @@ async function seed() {
   console.log(`  CONV_A messages: ${[msg1, msg2, msg3].length} seeded`);
 
   // ── 8. Seed message in CONV_B ──────────────────────────────────────────────
-  const msgB = await prisma.chatMessage.upsert({
+  await prisma.chatMessage.upsert({
     where: { id: 'fixture_msg_b_1' },
     update: {},
     create: { id: 'fixture_msg_b_1', conversationId: convB.id, senderId: userB.id, senderRole: 'USER', message: 'Test message from User B.' },
