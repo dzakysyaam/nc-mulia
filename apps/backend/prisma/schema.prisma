@@ -318,8 +318,8 @@ model BmiRecord {
 enum BmiCategory {
   KURUS
   NORMAL
-  OVERWEIGHT
-  OBESITY
+  KELebihan_BERAT
+  OBESITAS
 }
 
 model Payment {

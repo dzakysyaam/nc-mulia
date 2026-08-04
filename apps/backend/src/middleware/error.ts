@@ -11,6 +11,24 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ): void {
+  // Mask Prisma / database connector errors — never expose internals to client
+  const isConnectorError = err.message?.includes('prisma.') ||
+    err.message?.includes('ConnectorError') ||
+    err.message?.includes('Data truncated') ||
+    err.message?.includes('MySQL Error') ||
+    err.message?.includes('QueryError') ||
+    err.message?.includes('Unique constraint') ||
+    err.message?.includes('Foreign key constraint');
+
+  if (isConnectorError) {
+    console.error('[error] DB error:', err.message?.slice(0, 200));
+    res.status(500).json({
+      success: false,
+      message: 'Data BMI belum berhasil disimpan. Silakan coba kembali.',
+    });
+    return;
+  }
+
   res.status(err.statusCode ?? 500).json({
     success: false,
     message: err.message ?? 'Internal server error',
