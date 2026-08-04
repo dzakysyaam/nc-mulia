@@ -120,9 +120,9 @@ router.post('/seed-chat-preview', async (req, res) => {
       success: true,
       message: 'Chat fixture seeded successfully.',
       data: {
-        superAdmin: { id: superAdmin.id, email: superAdmin.email, role: 'super_admin' },
-        userA: { id: userA.id, email: userA.email, role: 'user', convId: convA.id },
-        userB: { id: userB.id, email: userB.email, role: 'user', convId: convB.id },
+        superAdmin: { id: superAdmin.id, email: SUPER_ADMIN_EMAIL.toLowerCase().trim(), role: 'super_admin' },
+        userA: { id: userA.id, email: USER_A_EMAIL.toLowerCase().trim(), role: 'user', convId: convA.id },
+        userB: { id: userB.id, email: USER_B_EMAIL.toLowerCase().trim(), role: 'user', convId: convB.id },
       },
     });
   } catch (err: unknown) {
